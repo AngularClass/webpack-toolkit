@@ -46,9 +46,9 @@ export class WebpackComponentResolver {
   clearCache(): void {}
 
   private _fetchComponent(componentType) {
-    return this._asyncComponents[componentType](componentType)
-      .then(cmp => {
-        return this._resolver.resolveComponent(cmp);
+    return this._asyncComponents[componentType]()
+      .then(cmpFile => {
+        return this._resolver.resolveComponent(cmpFile[componentType] || cmpFile.default);
       });
   }
 }

@@ -48,7 +48,7 @@ export class WebpackComponentResolver {
   private _fetchComponent(componentType) {
     return this._asyncComponents[componentType]()
       .then(cmpFile => {
-        return this._resolver.resolveComponent(cmpFile[componentType] || cmpFile.default);
+        return this._resolver.resolveComponent(cmpFile[componentType] || cmpFile.default || cmpFile);
       });
   }
 }

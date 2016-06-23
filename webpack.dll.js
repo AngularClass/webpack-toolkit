@@ -78,6 +78,14 @@ var webpackConfig = {
     ],
     loaders: [
     ]
+  },
+
+  node: {
+    global: 'window',
+    crypto: 'empty',
+    module: false,
+    clearImmediate: false,
+    setImmediate: false
   }
 
 };

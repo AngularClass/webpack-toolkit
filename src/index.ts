@@ -1,19 +1,19 @@
-import { ComponentResolver, Injectable, Inject } from '@angular/core';
+import { ComponentResolver, Injectable, Inject, OpaqueToken } from '@angular/core';
 import { RuntimeCompiler } from '@angular/compiler';
 
-export const AC_WEBPACK_ASYNC_MAP = {};
+export const AC_WEBPACK_ASYNC_MAP = new OpaqueToken('AC_WEBPACK_ASYNC_MAP');
 
 @Injectable()
 export class WebpackAsyncModules {
   constructor(
-    @Inject(AC_WEBPACK_ASYNC_MAP) private _asyncComponents: any) {
+    @Inject(AC_WEBPACK_ASYNC_MAP) private _asyncModules: any) {
 
   }
   fetch(moduleName: string) {
-    return this._asyncComponents[moduleName]();
+    return this._asyncModules[moduleName]();
   }
   hasModule(moduleName: string) {
-    return !!this._asyncComponents[moduleName];
+    return !!this._asyncModules[moduleName];
   }
 }
 
@@ -46,7 +46,6 @@ export class WebpackComponentResolver {
 
 
 export const ANGULARCLASS_WEBPACK_RUNTIME_PROVIDERS = [
-  { provide: AC_WEBPACK_ASYNC_MAP, useValue: {} },
   WebpackAsyncModules,
   {
     provide: ComponentResolver,
@@ -59,7 +58,7 @@ export const ANGULARCLASS_WEBPACK_RUNTIME_PROVIDERS = [
 
 export function provideWebpack(asyncModules) {
   return [
-    ...ANGULARCLASS_WEBPACK_RUNTIME_PROVIDERS,
     { provide: AC_WEBPACK_ASYNC_MAP, useValue: asyncModules },
+    ...ANGULARCLASS_WEBPACK_RUNTIME_PROVIDERS,
   ];
 }

@@ -11,31 +11,6 @@ export function composeRoutes(...routes) {
   return (<any>Object).assign(...routes);
 }
 
-@Injectable()
-export class AsyncRoute {
-  constructor(public router: Router, public webpackAsyncModules: WebpackAsyncModules) {
-  }
-  canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot) {
-    let commponentString: string = (<any>route).component;
-    let routeConfig = (<any>route)._routeConfig;
-    return Observable.fromPromise(new Promise(resolve => {
-      this.webpackAsyncModules.fetch(commponentString)
-        .then((asyncModule) => {
-          let currentRouteConfig = routeConfig;
-          let newRoutes = currentRouteConfig
-            .map(_route => {
-              if (_route.path === asyncModule.routes.path) {
-                return composeRoutes(_route, asyncModule.routes);
-              }
-              return _route;
-            });
-          this.router.resetConfig(newRoutes);
-          resolve(true);
-        });
-    }));
-  }
-
-}
 
 @Injectable()
 export class WebpackAsyncModules {
@@ -77,11 +52,41 @@ export class WebpackComponentResolver {
   }
 }
 
+@Injectable()
+export class WebpackAsyncRoute {
+  constructor(public router: Router, public webpackAsyncModules: WebpackAsyncModules) {
+  }
+  canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot) {
+    let commponentString: string = (<any>route).component;
+    let routeConfig = (<any>route)._routeConfig;
+    return Observable.fromPromise(new Promise(resolve => {
+      this.webpackAsyncModules.fetch(commponentString)
+        .then((asyncModule) => {
+          let currentRouteConfig = routeConfig;
+          let newRoutes = currentRouteConfig
+            .map(_route => {
+              if (_route.path === asyncModule.routes.path) {
+                return composeRoutes(_route, asyncModule.routes);
+              }
+              return _route;
+            });
+          this.router.resetConfig(newRoutes);
+          resolve(true);
+        });
+    }));
+  }
 
+}
 
 export const ANGULARCLASS_WEBPACK_RUNTIME_PROVIDERS = [
   WebpackAsyncModules,
-  AsyncRoute,
+  {
+    provide: WebpackAsyncRoute,
+    useFactory: (router, webpackAsyncModules) => {
+      return new WebpackAsyncRoute(router, webpackAsyncModules);
+    },
+    deps: [Router, WebpackAsyncModules]
+  },
   {
     provide: ComponentResolver,
     useFactory: (resolver, webpackAsyncModules) => {

@@ -13,7 +13,7 @@ export class WebpackAsyncModules {
     return this._asyncComponents[moduleName]();
   }
   hasModule(moduleName: string) {
-    return !!this._asyncComponents[moduleName]
+    return !!this._asyncComponents[moduleName];
   }
 }
 
@@ -31,7 +31,7 @@ export class WebpackComponentResolver {
         .then(cmpFile => {
           let component = this._resolveExports(cmpFile, componentType);
           return this._resolver.resolveComponent(component);
-        });;
+        });
     }
     return this._resolver.resolveComponent(componentType);
   }

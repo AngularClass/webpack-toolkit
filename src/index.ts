@@ -56,22 +56,27 @@ export class WebpackComponentResolver {
 export class WebpackAsyncRoute {
   constructor(public router: Router, public webpackAsyncModules: WebpackAsyncModules) {
   }
-  canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot) {
+  canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<boolean> | boolean {
     let commponentString: string = (<any>route).component;
+    if (typeof commponentString !== 'string') { return true; }
+
     let routeConfig = (<any>this).router.config;
-    return Observable.fromPromise(new Promise(resolve => {
+    return Observable.fromPromise<boolean>(new Promise(resolve => {
       this.webpackAsyncModules.fetch(commponentString)
         .then((asyncModule) => {
           let currentRouteConfig = routeConfig;
           let newRoutes = currentRouteConfig
             .map(_route => {
               if (_route.path === asyncModule.routes.path) {
-                return composeRoutes(_route, asyncModule.routes);
+                let newRoute = composeRoutes(_route, asyncModule.routes);
+                newRoute.canActivate = newRoute.canActivate.filter(active => active !== WebpackAsyncRoute);
+                return newRoute;
               }
               return _route;
             });
           this.router.resetConfig(newRoutes);
           resolve(true);
+          return asyncModule;
         });
     }));
   }

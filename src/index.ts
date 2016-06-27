@@ -1,7 +1,41 @@
 import { ComponentResolver, Injectable, Inject, OpaqueToken } from '@angular/core';
+import { ActivatedRouteSnapshot, Router, RouterStateSnapshot } from '@angular/router';
 import { RuntimeCompiler } from '@angular/compiler';
+import { Observable } from 'rxjs/Observable';
+import 'rxjs/add/observable/fromPromise';
 
 export const AC_WEBPACK_ASYNC_MAP = new OpaqueToken('AC_WEBPACK_ASYNC_MAP');
+
+
+export function composeRoutes(...routes) {
+  return (<any>Object).assign(...routes);
+}
+
+@Injectable()
+export class AsyncRoute {
+  constructor(public router: Router, public webpackAsyncModules: WebpackAsyncModules) {
+  }
+  canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot) {
+    let commponentString: string = (<any>route).component;
+    let routeConfig = (<any>route)._routeConfig;
+    return Observable.fromPromise(new Promise(resolve => {
+      this.webpackAsyncModules.fetch(commponentString)
+        .then((asyncModule) => {
+          let currentRouteConfig = routeConfig;
+          let newRoutes = currentRouteConfig
+            .map(_route => {
+              if (_route.path === asyncModule.routes.path) {
+                return composeRoutes(_route, asyncModule.routes);
+              }
+              return _route;
+            });
+          this.router.resetConfig(newRoutes);
+          resolve(true);
+        });
+    }));
+  }
+
+}
 
 @Injectable()
 export class WebpackAsyncModules {
@@ -47,6 +81,7 @@ export class WebpackComponentResolver {
 
 export const ANGULARCLASS_WEBPACK_RUNTIME_PROVIDERS = [
   WebpackAsyncModules,
+  AsyncRoute,
   {
     provide: ComponentResolver,
     useFactory: (resolver, webpackAsyncModules) => {

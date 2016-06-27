@@ -58,7 +58,7 @@ export class WebpackAsyncRoute {
   }
   canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot) {
     let commponentString: string = (<any>route).component;
-    let routeConfig = (<any>route)._routeConfig;
+    let routeConfig = (<any>route)._routeConfig || (<any>this).router.config;
     return Observable.fromPromise(new Promise(resolve => {
       this.webpackAsyncModules.fetch(commponentString)
         .then((asyncModule) => {

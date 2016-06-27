@@ -56,6 +56,7 @@ export const routes = {
 ```
 `app/app.routes.ts`
 ```typescript
+import { WebpackAsyncRoute } from '@angularclass/webpack-toolkit';
 export const routes = [
   { path: '', component: Home },
   { path: 'about', component: 'About', canActivate: [ WebpackAsyncRoute ] }
@@ -65,7 +66,7 @@ export const routes = [
 ```
 `main.browser.ts`
 ```typescript
-import {routes} from './app/app.routes';
+import { routes } from './app/app.routes';
 import { provideWebpack } from '@angularclass/webpack-toolkit';
 bootstrap(App, [
   provideRouter(routes),

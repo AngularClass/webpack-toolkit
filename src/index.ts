@@ -3,52 +3,63 @@ import { RuntimeCompiler } from '@angular/compiler';
 
 export const AC_WEBPACK_ASYNC_MAP = {};
 
+@Injectable()
+export class WebpackAsyncModules {
+  constructor(
+    @Inject(AC_WEBPACK_ASYNC_MAP) private _asyncComponents: any) {
 
-export const ANGULARCLASS_WEBPACK_RUNTIME_PROVIDERS = [
-  { provide: AC_WEBPACK_ASYNC_MAP, useValue: {} },
-  {
-    provide: ComponentResolver,
-    useFactory: (resolver, asyncMap) => {
-      return new WebpackComponentResolver(resolver, asyncMap);
-    },
-    deps: [RuntimeCompiler, AC_WEBPACK_ASYNC_MAP]
   }
-];
-
-export function provideWebpack(config) {
-  return [
-    ...ANGULARCLASS_WEBPACK_RUNTIME_PROVIDERS,
-    { provide: AC_WEBPACK_ASYNC_MAP, useValue: config },
-  ];
+  fetch(moduleName: string) {
+    return this._asyncComponents[moduleName]();
+  }
+  hasModule(moduleName: string) {
+    return !!this._asyncComponents[moduleName]
+  }
 }
 
 @Injectable()
 export class WebpackComponentResolver {
   constructor(
     private _resolver: ComponentResolver,
-    @Inject(AC_WEBPACK_ASYNC_MAP) private _asyncComponents: any) {
+    private _webpackAsyncModules: WebpackAsyncModules) {
 
   }
 
   resolveComponent(componentType: any) {
-    if (typeof componentType === 'string' && this._asyncComponents[componentType]) {
-      return this._fetchComponent(componentType);
+    if (typeof componentType === 'string' && this._webpackAsyncModules.hasModule[componentType]) {
+      return this._webpackAsyncModules.fetch(componentType)
+        .then(cmpFile => {
+          let component = this._resolveExports(cmpFile, componentType);
+          return this._resolver.resolveComponent(component);
+        });;
     }
     return this._resolver.resolveComponent(componentType);
   }
 
-
-  prefetchComponent(componentType) {
-    return this._fetchComponent(componentType);
-  }
-
-
   clearCache(): void {}
 
-  private _fetchComponent(componentType) {
-    return this._asyncComponents[componentType]()
-      .then(cmpFile => {
-        return this._resolver.resolveComponent(cmpFile[componentType] || cmpFile.default || cmpFile);
-      });
+  private _resolveExports(cmpFile, componentType) {
+    return cmpFile[componentType] || cmpFile.default || cmpFile;
   }
+}
+
+
+
+export const ANGULARCLASS_WEBPACK_RUNTIME_PROVIDERS = [
+  { provide: AC_WEBPACK_ASYNC_MAP, useValue: {} },
+  WebpackAsyncModules,
+  {
+    provide: ComponentResolver,
+    useFactory: (resolver, webpackAsyncModules) => {
+      return new WebpackComponentResolver(resolver, webpackAsyncModules);
+    },
+    deps: [RuntimeCompiler, WebpackAsyncModules]
+  }
+];
+
+export function provideWebpack(asyncModules) {
+  return [
+    ...ANGULARCLASS_WEBPACK_RUNTIME_PROVIDERS,
+    { provide: AC_WEBPACK_ASYNC_MAP, useValue: asyncModules },
+  ];
 }

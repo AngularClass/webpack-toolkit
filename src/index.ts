@@ -9,7 +9,7 @@ export class WebpackAsyncModules {
     @Inject(AC_WEBPACK_ASYNC_MAP) private _asyncModules: any) {
 
   }
-  fetch(moduleName: string) {
+  fetch(moduleName: string, exportName?: string) {
     return this._asyncModules[moduleName]();
   }
   hasModule(moduleName: string) {
@@ -26,7 +26,7 @@ export class WebpackComponentResolver {
   }
 
   resolveComponent(componentType: any) {
-    if (typeof componentType === 'string' && this._webpackAsyncModules.hasModule[componentType]) {
+    if (typeof componentType === 'string' && this._webpackAsyncModules.hasModule(componentType)) {
       return this._webpackAsyncModules.fetch(componentType)
         .then(cmpFile => {
           let component = this._resolveExports(cmpFile, componentType);

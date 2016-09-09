@@ -1,4 +1,4 @@
-import { ComponentResolver, Injectable, Inject, OpaqueToken } from '@angular/core';
+import { ComponentFactoryResolver, Injectable, Inject, OpaqueToken } from '@angular/core';
 import { ActivatedRouteSnapshot, Router, RouterStateSnapshot } from '@angular/router';
 import { RuntimeCompiler } from '@angular/compiler';
 import { Observable } from 'rxjs/Observable';
@@ -29,7 +29,7 @@ export class WebpackAsyncModules {
 @Injectable()
 export class WebpackComponentResolver {
   constructor(
-    private _resolver: ComponentResolver,
+    private _resolver: ComponentFactoryResolver,
     private _webpackAsyncModules: WebpackAsyncModules) {
 
   }
@@ -93,7 +93,7 @@ export const ANGULARCLASS_WEBPACK_RUNTIME_PROVIDERS = [
     deps: [Router, WebpackAsyncModules]
   },
   {
-    provide: ComponentResolver,
+    provide: ComponentFactoryResolver,
     useFactory: (resolver, webpackAsyncModules) => {
       return new WebpackComponentResolver(resolver, webpackAsyncModules);
     },
